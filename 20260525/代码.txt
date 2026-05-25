@@ -1,0 +1,69 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ----------------------
+# 1. 基础定义
+# ----------------------
+def pi_approx(n):
+    """n边正多边形逼近圆周率 π_n = n * sin(π/n)"""
+    return n * np.sin(np.pi / n)
+
+# 真实π值
+pi_exact = np.pi
+print(f"精确π值: {pi_exact:.15f}\n")
+
+# 取课件里的n序列
+n_list = [1,2,4,8,16,32,64,128,256]
+pi_est = []
+error = []
+
+# ----------------------
+# 2. 逐阶计算近似值与误差
+# ----------------------
+print(" n\t 近似π值\t\t 绝对误差|π-π_n|")
+print("-"*50)
+for n in n_list:
+    p = pi_approx(n)
+    e = abs(pi_exact - p)
+    pi_est.append(p)
+    error.append(e)
+    print(f"{n:3d}\t{p:.15f}\t{e:.15e}")
+
+# ----------------------
+# 3. 误差收敛性分析（课件收敛率验证）
+# 理论：e_h ≈ C·h² ，h=1/n，log(e) ~ 2*log(h)，收敛阶=2
+# ----------------------
+h = 1 / np.array(n_list)
+log_h = np.log10(h)
+log_e = np.log10(error)
+
+# ----------------------
+# 4. 画图：收敛曲线（双对数坐标）
+# ----------------------
+plt.figure(figsize=(8,6))
+plt.plot(log_h, log_e, 'o-', label='数值逼近误差')
+# 画斜率=2的参考线（理想二阶收敛）
+ref_x = np.array([log_h.min(), log_h.max()])
+ref_y = 2 * ref_x + log_e[0] - 2*log_h[0]
+plt.plot(ref_x, ref_y, '--', label='理论斜率=2 (二阶收敛)')
+
+plt.xlabel('log₁₀(h), h=1/n')
+plt.ylabel('log₁₀(误差 eₙ = |π-πₙ|)')
+plt.title('正多边形逼近π 误差收敛曲线（有限元思想）')
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.show()
+
+# ----------------------
+# 5. 理查森外推 提升精度（课件提到的Extrapolation）
+# ----------------------
+print("\n--- 理查森外推精度提升演示 ---")
+# 取相邻加密网格n和2n做外推，大幅压制二阶误差项
+for i in range(len(n_list)-1):
+    n = n_list[i]
+    p_n = pi_est[i]
+    p_2n = pi_est[i+1]
+    # 二阶精度外推公式
+    pi_extrap = (4*p_2n - p_n)/3
+    err_ext = abs(pi_exact - pi_extrap)
+    print(f"n={n:3d} 外推后: {pi_extrap:.15f}, 误差:{err_ext:.15e}")
